@@ -45,7 +45,7 @@ Or download a ZIP from the repository page and unzip it wherever you like — yo
 Run the included install script once:
 
 ```bash
-bash /path/to/NAL_metadata/install.sh
+bash /path/to/NAL_metadata-master/install.sh
 ```
 
 This does two things automatically:
@@ -63,7 +63,7 @@ nalmd
 If you'd rather not run the install script, just call the script directly by its full path:
 
 ```bash
-python3 /path/to/NAL_metadata/nalmd.py
+python3 /path/to/NAL_metadata-master/nalmd.py
 ```
 
 ### Windows
@@ -71,7 +71,7 @@ python3 /path/to/NAL_metadata/nalmd.py
 The tool works on Windows with one limitation: Tab key autocompletion at path prompts is not available (it requires a library that Windows doesn't include with Python by default). Everything else works normally. Run it from Command Prompt or PowerShell:
 
 ```
-python C:\path\to\NAL_metadata\nalmd.py
+python C:\path\to\NAL_metadata-master\nalmd.py
 ```
 
 ### Optional: edit config.py
@@ -94,7 +94,7 @@ python3 /path/to/nalmd.py
 Replace `/path/to/nalmd.py` with the actual location on your computer — for example:
 
 ```bash
-python3 /home/you/Documents/NAL_metadata/nalmd.py
+python3 /home/you/Documents/NAL_metadata-master/nalmd.py
 ```
 
 A menu appears:
