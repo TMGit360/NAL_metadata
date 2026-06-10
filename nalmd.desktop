@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NAL Metadata Toolkit
+Comment=Convert library metadata files to CSV for Omeka or Internet Archive
+Exec=bash -c 'python3 NALMD_PATH; read -p "Press Enter to close..."'
+Icon=text-csv
+Terminal=true
+Categories=Utility;Education;
+Keywords=metadata;omeka;mods;marc;csv;library;
