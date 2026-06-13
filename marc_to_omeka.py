@@ -231,12 +231,13 @@ def marc_record_to_dc(fields):
     }
 
 
-def marc_to_omeka(mrc_path: Path, output_dir: Path):
+def marc_to_omeka(mrc_path: Path, output_dir: Path, objects_dir: Path = None):
     mrc_path = Path(mrc_path).resolve()
     output_dir = Path(output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     out_path = output_dir / f"{mrc_path.stem}_omeka.csv"
 
+    search_dir = Path(objects_dir).resolve() if objects_dir else mrc_path.parent
     records = list(parse_marc21_file(mrc_path))
     if not records:
         print(f"No records found in {mrc_path}")
@@ -252,7 +253,7 @@ def marc_to_omeka(mrc_path: Path, output_dir: Path):
             first_id = d["identifier"][0] if d["identifier"] else ""
             types = d.get("type", [])
             writer.writerow([
-                _find_object_file(mrc_path.parent, first_id),
+                _find_object_file(search_dir, first_id),
                 d["title"],
                 _join(d["subject"]),
                 _join(d["description"]),

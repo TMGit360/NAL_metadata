@@ -105,6 +105,21 @@ def prompt_output_dir(input_path: Path, suffix="output"):
         return path
 
 
+def prompt_objects_dir():
+    """Ask for an optional separate folder containing object files."""
+    print("\n  Object files folder (images, videos, documents, etc.)")
+    print("  [Enter] Same as metadata folder")
+    print("  [path]  Type a different folder path")
+    answer = input("  Objects folder: ").strip()
+    if not answer or answer.lower() in ("quit", "q", "exit"):
+        return None
+    path = Path(answer).expanduser().resolve()
+    if path.is_dir():
+        return path
+    print(f"  '{answer}' is not a valid folder — using metadata folder instead.")
+    return None
+
+
 def prompt_fedora_url():
     if config.FEDORA_URL and config.FEDORA_URL != "YOUR_FEDORA_URL":
         return config.FEDORA_URL
@@ -124,10 +139,11 @@ def cmd_convert():
     target = prompt_input_dir()
     if not target:
         return
+    objects_dir = prompt_objects_dir()
     output_dir = prompt_output_dir(target, suffix="omeka")
     if output_dir:
         print()
-        convert_directory(target, output_dir)
+        convert_directory(target, output_dir, objects_dir=objects_dir)
 
 def cmd_omeka():
     from mods_to_omeka import mods_to_omeka
@@ -135,10 +151,11 @@ def cmd_omeka():
     target = prompt_input_dir()
     if not target:
         return
+    objects_dir = prompt_objects_dir()
     output_dir = prompt_output_dir(target, suffix="omeka")
     if output_dir:
         print()
-        mods_to_omeka(target, output_dir)
+        mods_to_omeka(target, output_dir, objects_dir=objects_dir)
 
 def cmd_marc():
     from marc_to_omeka import marc_to_omeka
@@ -146,10 +163,11 @@ def cmd_marc():
     mrc_file = prompt_input_file("MARC21 .mrc file")
     if not mrc_file:
         return
+    objects_dir = prompt_objects_dir()
     output_dir = prompt_output_dir(mrc_file, suffix="omeka")
     if output_dir:
         print()
-        marc_to_omeka(mrc_file, output_dir)
+        marc_to_omeka(mrc_file, output_dir, objects_dir=objects_dir)
 
 def cmd_iacsv():
     from mods_to_ia import mods_to_ia

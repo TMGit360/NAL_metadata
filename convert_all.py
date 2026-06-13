@@ -89,7 +89,7 @@ def _is_candidate(path: Path) -> bool:
     return path.suffix.lower() not in (".csv", ".txt", ".log", ".py", ".rb")
 
 
-def convert_directory(source_dir: Path, output_dir: Path, output_name: str = None):
+def convert_directory(source_dir: Path, output_dir: Path, output_name: str = None, objects_dir: Path = None):
     source_dir = Path(source_dir).resolve()
     output_dir = Path(output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -99,6 +99,7 @@ def convert_directory(source_dir: Path, output_dir: Path, output_name: str = Non
         out_name += "_omeka.csv"
     out_path = output_dir / out_name
 
+    search_dir = Path(objects_dir).resolve() if objects_dir else source_dir
     candidates = sorted(f for f in source_dir.iterdir() if f.is_file() and _is_candidate(f))
 
     if not candidates:
@@ -132,7 +133,7 @@ def convert_directory(source_dir: Path, output_dir: Path, output_name: str = Non
                 print(f"    [{fmt}] → {identifier or '(no identifier)'}")
                 types = d.get("type", [])
                 writer.writerow([
-                    _find_object_file(source_dir, first_id),
+                    _find_object_file(search_dir, path.stem),
                     _join(d.get("title") or ""),
                     _join(d.get("subject", [])),
                     _join(d.get("description", [])),

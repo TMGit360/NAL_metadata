@@ -46,7 +46,7 @@ def _join(values):
 
 
 
-def mods_to_omeka(target_dir: Path, output_dir: Path):
+def mods_to_omeka(target_dir: Path, output_dir: Path, objects_dir: Path = None):
     target_dir = Path(target_dir).resolve()
     output_dir = Path(output_dir).resolve()
     xml_files = list(find_xml_files(target_dir))
@@ -54,6 +54,7 @@ def mods_to_omeka(target_dir: Path, output_dir: Path):
         print(f"No XML files found in {target_dir}")
         return
 
+    search_dir = Path(objects_dir).resolve() if objects_dir else target_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     out_path = output_dir / f"{target_dir.name}_omeka.csv"
 
@@ -71,7 +72,7 @@ def mods_to_omeka(target_dir: Path, output_dir: Path):
 
             types = d.get("type", [])
             writer.writerow([
-                _find_object_file(target_dir, d["identifier"] or ""),
+                _find_object_file(search_dir, xml_path.stem),
                 d["title"] or "",
                 _join(d["subject"]),
                 _join(d["description"]),
