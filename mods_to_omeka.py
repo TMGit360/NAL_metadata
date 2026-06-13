@@ -3,10 +3,11 @@
 import csv
 from pathlib import Path
 
-from config import COL_SEP, VAL_SEP
+from config import COL_SEP, VAL_SEP, SIDELOAD_EXT
 from mods_parser import parse_mods, find_xml_files
 
 HEADERS = [
+    "sideload",
     "Dublin Core:Title",
     "Dublin Core:Subject",
     "Dublin Core:Description",
@@ -18,6 +19,7 @@ HEADERS = [
     "Dublin Core:Format",
     "Dublin Core:Language",
     "Dublin Core:Type",
+    "item_type_name",
     "Dublin Core:Identifier",
     "Item Type Metadata:Table of Contents",
     "tags",
@@ -28,6 +30,11 @@ HEADERS = [
 
 def _join(values):
     return VAL_SEP.join(v for v in values if v)
+
+
+def _sideload(identifier: str) -> str:
+    """Build the sideload filename from the record identifier."""
+    return f"{identifier}{SIDELOAD_EXT}" if identifier else ""
 
 
 def mods_to_omeka(target_dir: Path, output_dir: Path):
@@ -42,7 +49,7 @@ def mods_to_omeka(target_dir: Path, output_dir: Path):
     out_path = output_dir / f"{target_dir.name}_omeka.csv"
 
     with open(out_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f, delimiter=COL_SEP, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+        writer = csv.writer(f, delimiter=COL_SEP, quoting=csv.QUOTE_ALL, lineterminator="\n")
         writer.writerow(HEADERS)
 
         for xml_path in xml_files:
@@ -53,7 +60,9 @@ def mods_to_omeka(target_dir: Path, output_dir: Path):
                 print(f"  ERROR parsing {xml_path.name}: {e}")
                 continue
 
+            types = d.get("type", [])
             writer.writerow([
+                _sideload(d["identifier"] or ""),
                 d["title"] or "",
                 _join(d["subject"]),
                 _join(d["description"]),
@@ -64,7 +73,8 @@ def mods_to_omeka(target_dir: Path, output_dir: Path):
                 _join(d["rights"]),
                 _join(d["format"]),
                 _join(d["language"]),
-                _join(d["type"]),
+                _join(types),
+                types[0] if types else "",
                 d["identifier"] or "",
                 _join(d["toc"]),
                 _join(d["tags"]),
@@ -74,4 +84,5 @@ def mods_to_omeka(target_dir: Path, output_dir: Path):
             print(f"  Added {d['identifier'] or xml_path.name}")
 
     print(f"\nWrote {len(xml_files)} records to {out_path}")
+    print(f"  Omeka CSV Import — set 'Element delimiter' to:  {VAL_SEP}")
     return out_path

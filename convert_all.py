@@ -3,10 +3,11 @@
 import csv
 from pathlib import Path
 
-from config import COL_SEP, VAL_SEP
+from config import COL_SEP, VAL_SEP, SIDELOAD_EXT
 from format_detector import detect_format, MARC_BINARY, MARC_XML, MODS_XML, DC_XML, UNKNOWN
 
 HEADERS = [
+    "sideload",
     "Dublin Core:Title",
     "Dublin Core:Subject",
     "Dublin Core:Description",
@@ -20,6 +21,7 @@ HEADERS = [
     "Dublin Core:Format",
     "Dublin Core:Language",
     "Dublin Core:Type",
+    "item_type_name",
     "Dublin Core:Identifier",
     "Item Type Metadata:Table of Contents",
     "tags",
@@ -96,7 +98,7 @@ def convert_directory(source_dir: Path, output_dir: Path, output_name: str = Non
     format_counts = {}
 
     with open(out_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f, delimiter=COL_SEP, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+        writer = csv.writer(f, delimiter=COL_SEP, quoting=csv.QUOTE_ALL, lineterminator="\n")
         writer.writerow(HEADERS)
 
         for path in candidates:
@@ -108,9 +110,17 @@ def convert_directory(source_dir: Path, output_dir: Path, output_name: str = Non
                     skipped += 1
                     break
                 format_counts[fmt] = format_counts.get(fmt, 0) + 1
-                identifier = _join(d.get("identifier") or [d.get("identifier")])
+                identifier_raw = d.get("identifier")
+                if isinstance(identifier_raw, list):
+                    identifier = _join(identifier_raw)
+                    first_id = identifier_raw[0] if identifier_raw else ""
+                else:
+                    identifier = identifier_raw or ""
+                    first_id = identifier
                 print(f"    [{fmt}] → {identifier or '(no identifier)'}")
+                types = d.get("type", [])
                 writer.writerow([
+                    f"{first_id}{SIDELOAD_EXT}" if first_id else "",
                     _join(d.get("title") or ""),
                     _join(d.get("subject", [])),
                     _join(d.get("description", [])),
@@ -123,7 +133,8 @@ def convert_directory(source_dir: Path, output_dir: Path, output_name: str = Non
                     _join(d.get("relation", [])),
                     _join(d.get("format", [])),
                     _join(d.get("language", [])),
-                    _join(d.get("type", [])),
+                    _join(types),
+                    types[0] if types else "",
                     identifier,
                     _join(d.get("toc", [])),
                     _join(d.get("tags", [])),
@@ -142,4 +153,5 @@ def convert_directory(source_dir: Path, output_dir: Path, output_name: str = Non
         print(f"Files skipped:   {skipped}")
     for fmt, count in sorted(format_counts.items()):
         print(f"  {fmt}: {count} record(s)")
+    print(f"\n  Omeka CSV Import — set 'Element delimiter' to:  {VAL_SEP}")
     return out_path

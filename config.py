@@ -10,8 +10,15 @@ FEDORA_URL = "YOUR_FEDORA_URL"
 IA_RENAME_FROM = "box"
 IA_RENAME_TO   = "NAL_14_merrigan_455-"
 
-# Delimiter used between columns in output CSVs
-COL_SEP = "|"
+# Delimiter used between columns in output CSVs.
+# Standard comma keeps the file recognisable to Excel / LibreOffice without
+# any manual import-wizard configuration.
+COL_SEP = ","
 
-# Delimiter used between multiple values within a single cell
-VAL_SEP = "^"
+# Delimiter used between multiple values within a single cell.
+# In Omeka Classic CSV Import set "Element delimiter" to the same character.
+VAL_SEP = "|"
+
+# File extension appended to the identifier to build the sideload filename.
+# Change to ".jpg", ".pdf", etc. to match your actual object files.
+SIDELOAD_EXT = ".tiff"

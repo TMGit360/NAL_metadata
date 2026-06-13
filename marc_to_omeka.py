@@ -3,10 +3,11 @@
 import csv
 from pathlib import Path
 
-from config import COL_SEP, VAL_SEP
+from config import COL_SEP, VAL_SEP, SIDELOAD_EXT
 from marc_parser import parse_marc21_file, get_subfield, get_subfields
 
 HEADERS = [
+    "sideload",
     "Dublin Core:Title",
     "Dublin Core:Subject",
     "Dublin Core:Description",
@@ -20,6 +21,7 @@ HEADERS = [
     "Dublin Core:Format",
     "Dublin Core:Language",
     "Dublin Core:Type",
+    "item_type_name",
     "Dublin Core:Identifier",
     "Item Type Metadata:Table of Contents",
     "tags",
@@ -228,13 +230,16 @@ def marc_to_omeka(mrc_path: Path, output_dir: Path):
         return
 
     with open(out_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f, delimiter=COL_SEP, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+        writer = csv.writer(f, delimiter=COL_SEP, quoting=csv.QUOTE_ALL, lineterminator="\n")
         writer.writerow(HEADERS)
 
         for i, record in enumerate(records, 1):
             d = marc_record_to_dc(record["fields"])
             identifier_str = _join(d["identifier"])
+            first_id = d["identifier"][0] if d["identifier"] else ""
+            types = d.get("type", [])
             writer.writerow([
+                f"{first_id}{SIDELOAD_EXT}" if first_id else "",
                 d["title"],
                 _join(d["subject"]),
                 _join(d["description"]),
@@ -247,7 +252,8 @@ def marc_to_omeka(mrc_path: Path, output_dir: Path):
                 _join(d["relation"]),
                 _join(d["format"]),
                 _join(d["language"]),
-                _join(d["type"]),
+                _join(types),
+                types[0] if types else "",
                 identifier_str,
                 _join(d["toc"]),
                 _join(d["tags"]),
@@ -255,4 +261,5 @@ def marc_to_omeka(mrc_path: Path, output_dir: Path):
             print(f"  Added record {i}: {identifier_str or '(no identifier)'}")
 
     print(f"\nWrote {len(records)} records to {out_path}")
+    print(f"  Omeka CSV Import — set 'Element delimiter' to:  {VAL_SEP}")
     return out_path
