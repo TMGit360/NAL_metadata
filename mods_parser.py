@@ -97,8 +97,10 @@ def parse_mods(xml_path):
             creators.append(f"{full} ({role})" if role else full)
 
     # ------------------------------------------------------------ Description
+    # Use abstracts as the primary description; notes are cataloger's notes
+    # and usually not meaningful for public display in Omeka.
     descriptions = []
-    for el in root.findall("m:abstract", ns) + root.findall("m:note", ns):
+    for el in root.findall("m:abstract", ns):
         if el.text:
             text = el.text.replace("\r", " ").replace("\n", " ").strip()
             if text:
@@ -120,26 +122,42 @@ def parse_mods(xml_path):
                     publishers.append(np.text.strip().rstrip(","))
 
     # ----------------------------------------------------------------- Dates
-    date_paths = [
-        "m:originInfo/m:dateIssued",
-        "m:originInfo/m:dateCreated",
-        "m:originInfo/m:dateCaptured",
-        "m:originInfo/m:copyrightDate",
-        "m:originInfo/m:dateOther",
-    ]
+    # Prefer human-readable dates (no encoding attribute) over marc-encoded
+    # duplicates. Fall back to any date value if no display date exists.
+    date_tags = ["m:dateIssued", "m:dateCreated", "m:dateCaptured",
+                 "m:copyrightDate", "m:dateOther"]
     dates = []
-    for path in date_paths:
-        dates.extend(_texts(root, path))
+    seen_dates = set()
+    for origin_el in root.findall("m:originInfo", ns):
+        for tag in date_tags:
+            display, fallback = [], []
+            for el in origin_el.findall(tag, ns):
+                if not el.text or not el.text.strip():
+                    continue
+                val = el.text.strip()
+                if el.get("encoding") == "marc":
+                    fallback.append(val)
+                else:
+                    display.append(val)
+            for val in (display or fallback):
+                if val not in seen_dates:
+                    dates.append(val)
+                    seen_dates.add(val)
 
     # --------------------------------------------------------------- Rights
     rights = _texts(root, "m:accessCondition")
 
     # --------------------------------------------------------------- Format
-    formats = (
-        _texts(root, "m:physicalDescription/m:form")
-        + _texts(root, "m:physicalDescription/m:extent")
-        + _texts(root, "m:physicalDescription/m:note")
-    )
+    # Skip RDA media/carrier technical codes and generic online-resource labels;
+    # keep only physically descriptive forms and the extent statement.
+    _SKIP_FORMS = {
+        "electronic resource", "remote", "computer", "online resource",
+        "unmediated", "sheet",
+    }
+    formats = [
+        f for f in _texts(root, "m:physicalDescription/m:form")
+        if f.lower() not in _SKIP_FORMS
+    ] + _texts(root, "m:physicalDescription/m:extent")
 
     # ------------------------------------------------------------- Language
     # Prefer human-readable text terms; fall back to code values
@@ -152,7 +170,8 @@ def parse_mods(xml_path):
         ]
 
     # ----------------------------------------------------------------- Type
-    types = _texts(root, "m:genre")
+    # <typeOfResource> is the primary DC:Type; <genre> provides additional detail.
+    types = _texts(root, "m:typeOfResource") + _texts(root, "m:genre")
 
     # ------------------------------------------------------------- Identifier
     # Prefer LCCN; skip invalid identifiers; fall back to first valid one
