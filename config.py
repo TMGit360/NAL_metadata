@@ -18,7 +18,3 @@ COL_SEP = ","
 # Delimiter used between multiple values within a single cell.
 # In Omeka Classic CSV Import set "Element delimiter" to the same character.
 VAL_SEP = "|"
-
-# File extension appended to the identifier to build the sideload filename.
-# Change to ".jpg", ".pdf", etc. to match your actual object files.
-SIDELOAD_EXT = ".tiff"

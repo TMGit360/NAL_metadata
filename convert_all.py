@@ -3,8 +3,20 @@
 import csv
 from pathlib import Path
 
-from config import COL_SEP, VAL_SEP, SIDELOAD_EXT
+from config import COL_SEP, VAL_SEP
 from format_detector import detect_format, MARC_BINARY, MARC_XML, MODS_XML, DC_XML, UNKNOWN
+
+_METADATA_EXTS = {".xml", ".mrc", ".csv", ".txt", ".log", ".py", ".rb", ".json"}
+
+
+def _find_object_file(directory: Path, identifier: str) -> str:
+    """Return the filename of the object file matching the identifier, or the bare identifier."""
+    if not identifier:
+        return ""
+    for match in sorted(directory.glob(f"{identifier}.*")):
+        if match.suffix.lower() not in _METADATA_EXTS:
+            return match.name
+    return identifier
 
 HEADERS = [
     "sideload",
@@ -120,7 +132,7 @@ def convert_directory(source_dir: Path, output_dir: Path, output_name: str = Non
                 print(f"    [{fmt}] → {identifier or '(no identifier)'}")
                 types = d.get("type", [])
                 writer.writerow([
-                    f"{first_id}{SIDELOAD_EXT}" if first_id else "",
+                    _find_object_file(source_dir, first_id),
                     _join(d.get("title") or ""),
                     _join(d.get("subject", [])),
                     _join(d.get("description", [])),

@@ -3,8 +3,20 @@
 import csv
 from pathlib import Path
 
-from config import COL_SEP, VAL_SEP, SIDELOAD_EXT
+from config import COL_SEP, VAL_SEP
 from mods_parser import parse_mods, find_xml_files
+
+_METADATA_EXTS = {".xml", ".mrc", ".csv", ".txt", ".log", ".py", ".rb", ".json"}
+
+
+def _find_object_file(directory: Path, identifier: str) -> str:
+    """Return the filename of the object file matching the identifier, or the bare identifier."""
+    if not identifier:
+        return ""
+    for match in sorted(directory.glob(f"{identifier}.*")):
+        if match.suffix.lower() not in _METADATA_EXTS:
+            return match.name
+    return identifier
 
 HEADERS = [
     "sideload",
@@ -32,9 +44,6 @@ def _join(values):
     return VAL_SEP.join(v for v in values if v)
 
 
-def _sideload(identifier: str) -> str:
-    """Build the sideload filename from the record identifier."""
-    return f"{identifier}{SIDELOAD_EXT}" if identifier else ""
 
 
 def mods_to_omeka(target_dir: Path, output_dir: Path):
@@ -62,7 +71,7 @@ def mods_to_omeka(target_dir: Path, output_dir: Path):
 
             types = d.get("type", [])
             writer.writerow([
-                _sideload(d["identifier"] or ""),
+                _find_object_file(target_dir, d["identifier"] or ""),
                 d["title"] or "",
                 _join(d["subject"]),
                 _join(d["description"]),

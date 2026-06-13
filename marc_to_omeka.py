@@ -3,8 +3,21 @@
 import csv
 from pathlib import Path
 
-from config import COL_SEP, VAL_SEP, SIDELOAD_EXT
+from config import COL_SEP, VAL_SEP
 from marc_parser import parse_marc21_file, get_subfield, get_subfields
+
+_METADATA_EXTS = {".xml", ".mrc", ".csv", ".txt", ".log", ".py", ".rb", ".json"}
+
+
+def _find_object_file(directory: Path, identifier: str) -> str:
+    """Return the filename of the object file matching the identifier, or the bare identifier."""
+    if not identifier:
+        return ""
+    if directory:
+        for match in sorted(directory.glob(f"{identifier}.*")):
+            if match.suffix.lower() not in _METADATA_EXTS:
+                return match.name
+    return identifier
 
 HEADERS = [
     "sideload",
@@ -239,7 +252,7 @@ def marc_to_omeka(mrc_path: Path, output_dir: Path):
             first_id = d["identifier"][0] if d["identifier"] else ""
             types = d.get("type", [])
             writer.writerow([
-                f"{first_id}{SIDELOAD_EXT}" if first_id else "",
+                _find_object_file(mrc_path.parent, first_id),
                 d["title"],
                 _join(d["subject"]),
                 _join(d["description"]),
